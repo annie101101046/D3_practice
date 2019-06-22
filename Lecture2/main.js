@@ -23,6 +23,16 @@ const csv = d3.csv('sorce.csv')
             d.sale = parseFloat(d.sale);
         });
 
+        // 計算所有資料的平均數
+        //reduce num 是指第一個值 0， d 是裡面所有的數值
+        const average = data.reduce(function (num, d) {
+            console.log('num', num);
+            console.log('d', d);
+            return num + d.sale;
+        }, 0) / data.length;
+
+        console.log(average);
+
         // 計算出最高的 sale
         const maxSale = d3.max(data, function (d) {
             //d 代表每個在 data 裡的物件，只要 return 需要比對大小的屬性
@@ -88,6 +98,13 @@ const csv = d3.csv('sorce.csv')
             .attr('height', function (d) {
                 return y(d.sale);
                 // 一種做法是 d.sale/100 ，但會有一些比照上的問題
+            })
+            .attr('fill', function (d) {
+                if (d.sale >= average) {
+                    return 'pink'
+                } else {
+                    return 'red'
+                }
             })
     });
 

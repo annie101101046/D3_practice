@@ -32,6 +32,35 @@ const csv = d3.csv('sorce.csv')
         // 得到最大值
         // console.log('maxSale', maxSale);
 
+        // 整理 labels
+        const labels = data.map(function (d) {
+            return d.name;
+        });
+        // console.log(labels); // 會出現所有人的名字
+
+        // 建立 x 軸的對應，用 scaleBand
+        const x = d3.scaleBand()
+            // 傳入原始資料需要對照的 key
+            .domain(labels)
+            // 顯示時最小與最大的值
+            .range([0, width])
+            // 設定資料間的留白
+            .paddingInner(0.2)
+            // 最左邊跟最右邊
+            .paddingOuter(0.5);
+
+
+
+        //顯示的寬度 / 資料的長度 - 留白
+        // console.log(x.bandwidth());
+
+        // console.log({
+        //     Linda: x('Linda'),
+        //     David: x('David'),
+        //     Andrew: x('Andrew')
+        // })
+
+
         // 建立 y 軸比例尺
         const y = d3.scaleLinear()
             //原始資料範圍，填入最小到最大
@@ -52,15 +81,17 @@ const csv = d3.csv('sorce.csv')
         bars.enter()
             .append('rect')
             .attr('x', function (d, i) {
-                return i * 30
+                return x(d.name);
             })
             .attr('y', 0)
-            .attr('width', 20)
+            .attr('width', x.bandwidth())
             .attr('height', function (d) {
-                return d.sale;
+                return y(d.sale);
                 // 一種做法是 d.sale/100 ，但會有一些比照上的問題
             })
     });
+
+
 
 
 

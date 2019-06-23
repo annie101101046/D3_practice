@@ -121,7 +121,7 @@ const csv = d3
             })
             .attr('opacity', normalOpacity)
             // .on('事件名稱', function(d){})
-            .on('mouseenter', function (d) {
+            .on('mousemove', function (d) {
                 console.log(d.sale);
                 console.log(this);
                 console.log(d3.event)

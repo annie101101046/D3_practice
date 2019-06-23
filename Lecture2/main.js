@@ -124,6 +124,7 @@ const csv = d3
             .on('mouseenter', function (d) {
                 console.log(d.sale);
                 console.log(this);
+                console.log(d3.event)
                 // 選到被接觸的矩形
                 d3.select(this)
                     .attr('opacity', hoverOpacity);
@@ -131,6 +132,8 @@ const csv = d3
                 d3.select('#tooltip')
                     //改變這個元素的 css
                     .style('opacity', 1)
+                    .style('left', `${d3.event.pageX}px`)
+                    .style('top', `${d3.event.pageY}px`)
             })
             .on('mouseleave', function (d) {
                 d3.select(this)

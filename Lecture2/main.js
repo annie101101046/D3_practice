@@ -1,130 +1,163 @@
-// 建立兩個常數
-const width = 500,
-    height = 500;
+// svg的大小
+const svgWidth = 500,
+    svgHeight = 500;
 
-// 在容器裡放入 svg
+// svg對圖表的留白
+const padding = {
+    top: 20,
+    bottom: 20,
+    left: 60,
+    right: 20
+}
+
+// 圖表group的大小
+const width = svgWidth - padding.left - padding.right,
+    height = svgHeight - padding.top - padding.bottom;
+
+// 在圖表容器裡面放入svg
 const svg = d3.select('#chart')
     .append('svg')
-    .attr('width', width)
-    .attr('height', height);
+    .attr('width', svgWidth)
+    .attr('height', svgHeight);
 
-// 在svg 放入一個 group
-const group = svg.append('g');
+// 在svg放入一個group
+const group = svg.append('g')
+    // 讓圖表區位移
+    .attr('transform', `translate(${padding.left},${padding.top})`);
 
-// 讀取 csv 檔案
-const csv = d3.csv('sorce.csv')
-    // console.log(csv) // 會發現是一個 promise
-    // 當成功讀取檔案後
+// 讀取csv檔案
+const csv = d3
+    .csv('source.csv')
+    // 當成功讀取檔案之後
     .then(function (data) {
-        // console.log(data); 會得到 array
         data.forEach(function (d) {
-            // console.log(d); //每個物件印出來
-            // 資料整數格式化
+            // 把sale值轉為數字
             d.sale = parseFloat(d.sale);
         });
 
-        // 計算所有資料的平均數
-        //reduce num 是指第一個值 0， d 是裡面所有的數值
-        const average = data.reduce(function (num, d) {
-            console.log('num', num);
-            console.log('d', d);
+        // 計算平均sale
+        const avgSale = data.reduce(function (num, d) {
+            // console.log('num', num);
+            // console.log('d', d);
             return num + d.sale;
         }, 0) / data.length;
 
-        console.log(average);
-
-        // 計算出最高的 sale
+        // 計算出最高的sale
         const maxSale = d3.max(data, function (d) {
-            //d 代表每個在 data 裡的物件，只要 return 需要比對大小的屬性
+            // 回傳需要比對大小的屬性
             return d.sale;
         });
 
-        // 得到最大值
-        // console.log('maxSale', maxSale);
-
-        // 整理 labels
+        // 整理Labels
         const labels = data.map(function (d) {
             return d.name;
         });
-        // console.log(labels); // 會出現所有人的名字
 
-        // 建立 x 軸的對應，用 scaleBand
+        // 建立x軸的對應
         const x = d3.scaleBand()
-            // 傳入原始資料需要對照的 key
+            // 傳入原始資料需要對照的key
             .domain(labels)
             // 顯示時最小與最大的值
             .range([0, width])
-            // 設定資料間的留白
-            .paddingInner(0.2)
-            // 最左邊跟最右邊
-            .paddingOuter(0.5);
+            // 每一個bar之間的留白比例
+            .paddingInner(0.1)
+            // bars左右留白的比例
+            .paddingOuter(0.1);
 
+        // 描述需要顯示x軸
+        const xAxis = d3.axisBottom(x);
+        // 把x軸放到svg
+        // svg.append('g')
+        //     .call(xAxis)
+        //     .attr('transform', `translate(${padding.left}, ${height + padding.top})`);
 
+        group.append('g')
+            .call(xAxis)
+            .attr('transform', `translate(0, ${height})`);
 
-        //顯示的寬度 / 資料的長度 - 留白
-        // console.log(x.bandwidth());
-
-        // console.log({
-        //     Linda: x('Linda'),
-        //     David: x('David'),
-        //     Andrew: x('Andrew')
-        // })
-
-
-        // 建立 y 軸比例尺
+        // 建立y軸的比例尺
         const y = d3.scaleLinear()
-            //原始資料範圍，填入最小到最大
+            // 傳入原始資料最小與最大值
             .domain([0, maxSale])
-            // 圖表顯示最小與最大的像素大小範圍
-            .range([0, height]);
+            // 定義顯示時，最小與最大的像素
+            // .range([0, height]);
+            .range([height, 0]);
 
-        //d3 會隨著傳入值換算成畫面的大小
-        // console.log(y(0));
-        // console.log(y(10000)); //會得到 238.09523809523807
-        // console.log(y(21000));
+        // 定義要顯示的y軸
+        const yAxis = d3.axisLeft(y);
+        // 把y軸放置到畫面上
+        group.append('g')
+            .call(yAxis);
 
-        // console.log(data) 會是物件以及 sales 是數字
-        //定義長條的群組並且賦予資料
-        const bars = group.selectAll('rect').data(data);
+        // 定義長條的群組，並傳遞資料
+        const bars = group
+            .selectAll('rect')
+            .data(data);
 
-        //繪製長條圖型
+        // 長條圖不透明度的兩種狀態
+        const normalOpacity = 0.7,
+            hoverOpacity = 1;
+
+
+        // 繪製長條圖形
         bars.enter()
             .append('rect')
             .attr('x', function (d, i) {
-                return x(d.name);
+                return x(d.name)
             })
-            .attr('y', 0)
+            .attr('y', function (d) {
+                return y(d.sale);
+            })
             .attr('width', x.bandwidth())
             .attr('height', function (d) {
-                return y(d.sale);
-                // 一種做法是 d.sale/100 ，但會有一些比照上的問題
+                return height - y(d.sale);
             })
             .attr('fill', function (d) {
-                if (d.sale >= average) {
-                    return 'pink'
+                if (d.sale >= avgSale) {
+                    return '#30c39e'
                 } else {
-                    return 'red'
+                    return '#fd5c63'
                 }
             })
+            .attr('opacity', normalOpacity)
+            // .on('事件名稱', function(d){})
+            .on('mouseenter', function (d) {
+                console.log(d.sale);
+                console.log(this);
+                // 選到被接觸的矩形
+                d3.select(this)
+                    .attr('opacity', hoverOpacity);
+                // 選到 tooltip
+                d3.select('#tooltip')
+                    //改變這個元素的 css
+                    .style('opacity', 1)
+            })
+            .on('mouseleave', function (d) {
+                d3.select(this)
+                    .attr('opacity', normalOpacity);
+                // 選到 tooltip
+                d3.select('#tooltip')
+                    //.text(d.name) 只能放文字、改變內部文字
+                    .html(`<p>${d.name}</p><p>$ ${d.sale}</p>`)
+                    //改變這個元素的 css
+                    .style('opacity', 0);
+            });
     });
 
+// console.log(csv);
 
-
-
-
-
-// 運用上週的練習畫出長條圖
-// const data = [10, 5, 6, 7, 15];
-// // 將 group 內的 rect 標籤對應到 data 內的資料
-// const bars = group.selectAll('rect').data(data);
-// bars.enter()
-//     .append('rect')
-//     .attr('width', 10)
-//     .attr('height', function (d) {
-//         return d * 10;
-//     })
-
-//     .attr('y', 20)
-//     .attr('x', function (d, i) {
-//         return i * 20;
-//     })
+/*
+const data = [10, 5, 6, 7, 15];
+// 將group內的rect標籤對應到data內的資料
+const bars = group.selectAll('rect').data(data);
+bars.enter()
+    .append('rect')
+    .attr('width', 10)
+    .attr('height', function (d) {
+        return d * 10;
+    })
+    .attr('y', 20)
+    .attr('x', function (d, i) {
+        return i * 20
+    })
+*/

@@ -132,7 +132,7 @@ const csv = d3
                 d3.select('#tooltip')
                     //改變這個元素的 css
                     .style('opacity', 1)
-                    .style('left', `${d3.event.pageX}px`)
+                    .style('left', `${d3.event.pageX -5}px`)
                     .style('top', `${d3.event.pageY}px`)
             })
             .on('mouseleave', function (d) {

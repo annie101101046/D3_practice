@@ -114,15 +114,22 @@ d3.csv('data.csv')
 
         //放置標題
         column.append('h1')
-            .attr('class', 'text-center text-primary')
+            .attr('class', 'text-center text-primary mb-5 mt-5')
             .text(function (d) {
                 return d.city
             })
 
         //定義尺寸
         const width = d3.select('.column').node().clientWidth,
-            height = width,
+            height = width + 200,
             radius = width / 2;
+
+        //定義顏色
+        // const colors = d3.schemeCategory10;
+        // console.log('colors:', colors);
+        const colors = d3.scaleOrdinal()
+            .range(d3.schemeCategory10)
+        // .range(['red', 'orange', 'blue'])
 
         // 取得 .column 的寬度
         // console.log('column:', d3.select('.column').node().clientWidth);
@@ -142,6 +149,7 @@ d3.csv('data.csv')
             .attr('height', '100%')
             .attr('viewBox', `0 0 ${width} ${height}`);
 
+
         /* 
         目前 data 格式，所以不能直接丟進去
         {
@@ -149,6 +157,44 @@ d3.csv('data.csv')
             data:[{},{},{}]
         }
         */
+
+
+        //在每個 svg 放入一個 g. label-container
+        const labelContainer = svg
+            .append('g')
+            .attr('class', 'label-container')
+            .attr('transform', `translate(0, ${(radius*2) + 15})`)
+
+        const labelGroup = labelContainer
+            .selectAll('.label-group')
+            .data(function (d) {
+                // console.log(d.data);
+                return d.data;
+            })
+            .enter()
+            .append('g')
+            .attr('class', 'label-group')
+            //照著資料順序位移y
+            .attr('transform', function (d, i) {
+                return `translate(0,${16 * i})`
+            });
+
+        labelGroup.append('rect')
+            .attr('width', 10)
+            .attr('height', 10)
+            .attr('fill', function (d, i) {
+                return colors(i);
+            })
+
+        labelGroup.append('text')
+            .text(function (d) {
+                console.log(d);
+                return `${d.title}: ${d.value}`
+            })
+            .attr('font-size', 10)
+            .attr('y', 8)
+            .attr('x', 15)
+
         const arcs = svg
             .selectAll('.arc')
             .data(function (d) {
@@ -159,7 +205,8 @@ d3.csv('data.csv')
             .attr('class', 'arc')
             .attr('transform', `translate(${radius},${radius})`)
 
-        const colors = d3.schemeCategory10;
+
+
 
         arcs.append('path')
             .attr('d', function (d) {
@@ -169,7 +216,7 @@ d3.csv('data.csv')
             })
 
             .attr('fill', function (d, i) {
-                return colors[i];
+                return colors(i);
             })
         // arcs.attr('test', function (d) {
         //     console.log(d);
